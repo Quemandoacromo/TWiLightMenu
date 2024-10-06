@@ -1677,7 +1677,7 @@ void vBlankHandler()
 		if (displayIcons) {
 			if (ms().ak_viewMode == TWLSettings::EViewSmallIcon && smallIconsToDisplay > 0) {
 				for (int i = 0; i < smallIconsToDisplay; i++) {
-					drawIcon(i, 5+16, (20+(i*18))+16, -0x800);
+					drawIcon(i, 5, (20+(i*18)), (1 << 11));
 				}
 			} else if (ms().ak_viewMode != TWLSettings::EViewList && iconsToDisplay > 0) {
 				for (int i = 0; i < iconsToDisplay; i++) {
@@ -1699,18 +1699,18 @@ void vBlankHandler()
 			glBoxFilled(16, 88, 240, 120+(dialogboxHeight*12), formBodyColor);
 		}
 
-		if (vblankRefreshCounter >= REFRESH_EVERY_VBLANKS) {
-			if (!showdialogbox) {
-				reloadIconPalettes();
-			}
-			vblankRefreshCounter = 0;
-		} else {
-			vblankRefreshCounter++;
-		}
-
 		glEnd2D();
 		GFX_FLUSH = 0;
 		updateFrame = false;
+	}
+
+	if (vblankRefreshCounter >= REFRESH_EVERY_VBLANKS) {
+		if (!showdialogbox) {
+			reloadIconPalettes();
+		}
+		vblankRefreshCounter = 0;
+	} else {
+		vblankRefreshCounter++;
 	}
 
 	if (doubleBuffer) {
@@ -1834,7 +1834,7 @@ void graphicsLoad()
 	dmaCopyHalfWordsAsynch(2, bottomImage[0], bottomImageWithBar[0], 0x18000);
 	dmaCopyHalfWordsAsynch(3, bottomImage[1], bottomImageWithBar[1], 0x18000);
 
-	if (sys().isRegularDS() || (dsiFeatures() && ms().consoleModel < 2)) {
+	if (sys().isRegularDS() || (dsiFeatures() && !sys().i2cBricked() && ms().consoleModel < 2)) {
 		std::string pathBrightness;
 		if (access((themePath + "/brightness.bmp").c_str(), F_OK) == 0) {
 			pathBrightness = themePath + "/brightness.bmp";

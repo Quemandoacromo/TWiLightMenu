@@ -64,7 +64,6 @@
 #define ENTRIES_PER_SCREEN 4
 #define ENTRIES_PER_SCREEN_SMALL 8
 #define ENTRIES_PER_SCREEN_LIST 10
-#define ENTRY_PAGE_LENGTH 10
 
 extern bool lcdSwapped;
 
@@ -226,6 +225,12 @@ void getDirectoryContents(std::vector<DirEntry> &dirContents, const std::vector<
 					backFound = true;
 					backPos = file_count;
 					file_count++;
+
+					iconsToDisplay++;
+					if (iconsToDisplay > 4) iconsToDisplay = 4;
+					smallIconsToDisplay++;
+					if (smallIconsToDisplay > 8) smallIconsToDisplay = 8;
+
 					fileStartPos++;
 				}
 				emplaceBackDirContent =
@@ -374,7 +379,7 @@ void getGameInfo0(const int fileOffset, std::vector<DirEntry> dirContents) {
 		isDirectory[0] = false;
 		std::string std_romsel_filename = dirContents.at(fileOffset).name.c_str();
 		displayDiskIcon(ms().secondaryDevice);
-		getGameInfo(0, isDirectory[0], dirContents.at(fileOffset).name.c_str());
+		getGameInfo(0, isDirectory[0], dirContents.at(fileOffset).name.c_str(), false);
 		displayDiskIcon(false);
 
 		if (extension(std_romsel_filename, {".nds", ".dsi", ".ids", ".srl", ".app", ".argv"})) {
@@ -432,6 +437,7 @@ void getGameInfo0(const int fileOffset, std::vector<DirEntry> dirContents) {
 
 	if (bnrRomType[0] != 0) {
 		bnrWirelessIcon[0] = 0;
+		isValid[0] = true;
 		isTwlm[0] = false;
 		isDSiWare[0] = false;
 		isHomebrew[0] = 0;
@@ -469,7 +475,7 @@ void loadIcons(const int screenOffset, std::vector<DirEntry> dirContents) {
 		} else {
 			isDirectory[n] = false;
 			std::string std_romsel_filename = dirContents.at(i).name.c_str();
-			getGameInfo(n, isDirectory[n], dirContents.at(i).name.c_str());
+			getGameInfo(n, isDirectory[n], dirContents.at(i).name.c_str(), false);
 
 			if (extension(std_romsel_filename, {".nds", ".dsi", ".ids", ".srl", ".app", ".argv"})) {
 				bnrRomType[n] = 0;
@@ -526,6 +532,7 @@ void loadIcons(const int screenOffset, std::vector<DirEntry> dirContents) {
 
 		if (bnrRomType[n] != 0) {
 			bnrWirelessIcon[n] = 0;
+			isValid[n] = true;
 			isTwlm[n] = false;
 			isDSiWare[n] = false;
 			isHomebrew[n] = 0;
@@ -581,7 +588,7 @@ void loadIconUp(const int screenOffset, std::vector<DirEntry> dirContents) {
 	} else {
 		isDirectory[n] = false;
 		std::string std_romsel_filename = dirContents.at(i).name.c_str();
-		getGameInfo(n, isDirectory[n], dirContents.at(i).name.c_str());
+		getGameInfo(n, isDirectory[n], dirContents.at(i).name.c_str(), false);
 
 		if (extension(std_romsel_filename, {".nds", ".dsi", ".ids", ".srl", ".app", ".argv"})) {
 			bnrRomType[n] = 0;
@@ -637,6 +644,7 @@ void loadIconUp(const int screenOffset, std::vector<DirEntry> dirContents) {
 
 		if (bnrRomType[n] != 0) {
 			bnrWirelessIcon[n] = 0;
+			isValid[n] = true;
 			isTwlm[n] = false;
 			isDSiWare[n] = false;
 			isHomebrew[n] = 0;
@@ -692,7 +700,7 @@ void loadIconDown(const int screenOffset, std::vector<DirEntry> dirContents) {
 	} else {
 		isDirectory[n] = false;
 		std::string std_romsel_filename = dirContents.at(i).name.c_str();
-		getGameInfo(n, isDirectory[n], dirContents.at(i).name.c_str());
+		getGameInfo(n, isDirectory[n], dirContents.at(i).name.c_str(), false);
 
 		if (extension(std_romsel_filename, {".nds", ".dsi", ".ids", ".srl", ".app", ".argv"})) {
 			bnrRomType[n] = 0;
@@ -748,6 +756,7 @@ void loadIconDown(const int screenOffset, std::vector<DirEntry> dirContents) {
 
 		if (bnrRomType[n] != 0) {
 			bnrWirelessIcon[n] = 0;
+			isValid[n] = true;
 			isTwlm[n] = false;
 			isDSiWare[n] = false;
 			isHomebrew[n] = 0;
@@ -998,10 +1007,12 @@ bool donorRomMsg(void) {
 	return proceedToLaunch;
 }
 
-bool checkForCompatibleGame(const char *filename) {
+bool checkForCompatibleGame() {
+	return true;
+
 	bool proceedToLaunch = true;
 
-	if (!dsiFeatures() && ms().secondaryDevice) {
+	/* if (!dsiFeatures() && ms().secondaryDevice) {
 		// TODO: If the list gets large enough, switch to bsearch().
 		for (unsigned int i = 0; i < sizeof(incompatibleGameListB4DS)/sizeof(incompatibleGameListB4DS[0]); i++) {
 			if (memcmp(gameTid[cursorPosOnScreen], incompatibleGameListB4DS[i], 3) == 0) {
@@ -1010,9 +1021,9 @@ bool checkForCompatibleGame(const char *filename) {
 				break;
 			}
 		}
-	}
+	} */
 
-	if (proceedToLaunch && ms().secondaryDevice) {
+	/* if (proceedToLaunch && ms().secondaryDevice) {
 		// TODO: If the list gets large enough, switch to bsearch().
 		for (unsigned int i = 0; i < sizeof(incompatibleGameListFC)/sizeof(incompatibleGameListFC[0]); i++) {
 			if (memcmp(gameTid[cursorPosOnScreen], incompatibleGameListFC[i], 3) == 0) {
@@ -1021,7 +1032,7 @@ bool checkForCompatibleGame(const char *filename) {
 				break;
 			}
 		}
-	}
+	} */
 
 	/* if (proceedToLaunch) {
 		// TODO: If the list gets large enough, switch to bsearch().
@@ -1071,7 +1082,7 @@ bool checkForCompatibleGame(const char *filename) {
 	return proceedToLaunch;
 }
 
-bool gameCompatibleMemoryPit(const char* filename) {
+bool gameCompatibleMemoryPit(void) {
 	// TODO: If the list gets large enough, switch to bsearch().
 	for (unsigned int i = 0; i < sizeof(incompatibleGameListMemoryPit)/sizeof(incompatibleGameListMemoryPit[0]); i++) {
 		if (memcmp(gameTid[cursorPosOnScreen], incompatibleGameListMemoryPit[i], 3) == 0) {
@@ -1082,7 +1093,7 @@ bool gameCompatibleMemoryPit(const char* filename) {
 	return true;
 }
 
-bool checkForGbaBiosRequirement(const char* filename) {
+bool checkForGbaBiosRequirement(void) {
 	extern bool gbaBiosFound[2];
 
 	if (gbaBiosFound[ms().secondaryDevice]) {
@@ -1500,8 +1511,8 @@ std::string browseForFile(const std::vector<std::string_view> extensionList) {
 			resetIconScale();
 		}
 		if (pressed & KEY_LEFT) {
-			fileOffset -= ENTRY_PAGE_LENGTH;
-			screenOffset -= ENTRY_PAGE_LENGTH;
+			fileOffset -= entriesPerScreen;
+			screenOffset -= entriesPerScreen;
 			if (fileOffset < 0) fileOffset = 0;
 			if (screenOffset < 0) screenOffset = 0;
 			cursorPosOnScreen = fileOffset - screenOffset;
@@ -1509,8 +1520,8 @@ std::string browseForFile(const std::vector<std::string_view> extensionList) {
 			resetIconScale();
 		}
 		if (pressed & KEY_RIGHT) {
-			fileOffset += ENTRY_PAGE_LENGTH;
-			screenOffset += ENTRY_PAGE_LENGTH;
+			fileOffset += entriesPerScreen;
+			screenOffset += entriesPerScreen;
 			if (fileOffset > (int)dirContents.size() - 1) fileOffset = (int)dirContents.size() - 1;
 			if (screenOffset > (int)dirContents.size() - entriesPerScreen) screenOffset = (int)dirContents.size() - entriesPerScreen;
 			cursorPosOnScreen = fileOffset - screenOffset;
@@ -1703,72 +1714,6 @@ std::string browseForFile(const std::vector<std::string_view> extensionList) {
 			}
 		}
 
-		if (pressed & KEY_SELECT) {
-			listModeSwitched = (ms().ak_viewMode == TWLSettings::EViewList);
-
-			ms().ak_viewMode++;
-			if (ms().ak_viewMode > 3) ms().ak_viewMode = 0;
-
-			entriesPerScreen = (ms().ak_viewMode == TWLSettings::EViewList) ? ENTRIES_PER_SCREEN_LIST : ENTRIES_PER_SCREEN;
-			if (ms().ak_viewMode == TWLSettings::EViewSmallIcon) {
-				entriesPerScreen = ENTRIES_PER_SCREEN_SMALL;
-			}
-			displayIcons = (ms().ak_viewMode != TWLSettings::EViewList);
-			refreshIcons = (ms().ak_viewMode == TWLSettings::EViewSmallIcon);
-			
-			if (screenOffset > fileOffset - entriesPerScreen) screenOffset = fileOffset - entriesPerScreen;
-			if (screenOffset < fileOffset) screenOffset = fileOffset;
-			if (screenOffset > (int)dirContents.size() - entriesPerScreen) screenOffset = (int)dirContents.size() - entriesPerScreen;
-			if (screenOffset < 0) screenOffset = 0;
-			cursorPosOnScreen = fileOffset - screenOffset;
-			if (cursorPosOnScreen > entriesPerScreen - 1) cursorPosOnScreen = entriesPerScreen - 1;
-			if (cursorPosOnScreen < 0) cursorPosOnScreen = 0;
-		}
-
-		if (fileOffset < 0) {
-			fileOffset = dirContents.size() - 1;		// Wrap around to bottom of list
-			if (file_count > entriesPerScreen) {
-				screenOffset = (file_count-1) - entriesPerScreen;
-			}
-			cursorPosOnScreen = file_count-1;
-			if (cursorPosOnScreen > entriesPerScreen - 1) cursorPosOnScreen = entriesPerScreen - 1;
-		}
-		if (fileOffset > ((int)dirContents.size() - 1)) {
-			fileOffset = 0;		// Wrap around to top of list
-			screenOffset = 0;
-			cursorPosOnScreen = 0;
-		}
-
-		// Scroll screen if needed
-		if (fileOffset - screenOffset < (0.5 * entriesPerScreen) - 1){
-			if (screenOffset > 0) {
-				screenOffset--;
-				cursorPosOnScreen = fileOffset - screenOffset;
-				// scrollUpByOne = true;
-			}
-		} else if (fileOffset - screenOffset > (0.5 * entriesPerScreen)) {
-			if (screenOffset + entriesPerScreen < file_count) {
-				screenOffset++;
-				cursorPosOnScreen = fileOffset - screenOffset;
-				// scrollDownByOne = true;
-			}
-		}
-		if (displayIcons && (screenOffsetPrev != screenOffset || listModeSwitched || refreshIcons)) {
-			/* if (scrollUpByOne) {
-				loadIconUp(screenOffset, dirContents);
-			} else if (scrollDownByOne) {
-				loadIconDown(screenOffset, dirContents);
-			} else { */
-				loadIcons(screenOffset, dirContents);
-			// }
-		} else {
-			refreshBanners(screenOffset, fileOffset, dirContents);
-		}
-		updateSelectionBar();
-		screenOffsetPrev = screenOffset;
-		listModeSwitched = false;
-		refreshIcons = false;
-
 		if ((pressed & KEY_A) || selectionTouched) {
 			resetIconScale();
 			DirEntry* entry = &dirContents.at(fileOffset);
@@ -1790,16 +1735,16 @@ std::string browseForFile(const std::vector<std::string_view> extensionList) {
 				if (ms().ak_viewMode == TWLSettings::EViewList) {
 					cursorPosOnScreen = 0;
 				}
-				if (!isTwlm[cursorPosOnScreen]) {
+				if (isValid[cursorPosOnScreen] && !isTwlm[cursorPosOnScreen]) {
 					loadPerGameSettings(dirContents.at(fileOffset).name);
 				}
 				int hasAP = 0;
 				bool proceedToLaunch = true;
 
-				if (isTwlm[cursorPosOnScreen] || (!isDSiWare[cursorPosOnScreen] && (!dsiFeatures() || bs().b4dsMode) && ms().secondaryDevice && bnrRomType[cursorPosOnScreen] == 0 && gameTid[cursorPosOnScreen][0] == 'D' && romUnitCode[cursorPosOnScreen] == 3 && requiresDonorRom[cursorPosOnScreen] != 51)
+				if (!isValid[cursorPosOnScreen] || isTwlm[cursorPosOnScreen] || (!isDSiWare[cursorPosOnScreen] && (!dsiFeatures() || bs().b4dsMode) && ms().secondaryDevice && bnrRomType[cursorPosOnScreen] == 0 && gameTid[cursorPosOnScreen][0] == 'D' && romUnitCode[cursorPosOnScreen] == 3 && requiresDonorRom[cursorPosOnScreen] != 51)
 				|| (isDSiWare[cursorPosOnScreen] && ((((!dsiFeatures() && (!sdFound() || !ms().dsiWareToSD)) || bs().b4dsMode) && ms().secondaryDevice && !dsiWareCompatibleB4DS())
-				|| (isDSiMode() && memcmp(io_dldi_data->friendlyName, "CycloDS iEvolution", 18) != 0 && sys().arm7SCFGLocked() && !sys().dsiWramAccess() && !gameCompatibleMemoryPit(dirContents.at(fileOffset).name.c_str()))))
-				|| (bnrRomType[cursorPosOnScreen] == 1 && (!ms().secondaryDevice || dsiFeatures() || ms().gbaBooter == TWLSettings::EGbaGbar2) && checkForGbaBiosRequirement(dirContents.at(fileOffset).name.c_str()))) {
+				|| (isDSiMode() && memcmp(io_dldi_data->friendlyName, "CycloDS iEvolution", 18) != 0 && sys().arm7SCFGLocked() && !sys().dsiWramAccess() && !gameCompatibleMemoryPit())))
+				|| (bnrRomType[cursorPosOnScreen] == 1 && (!ms().secondaryDevice || dsiFeatures() || ms().gbaBooter == TWLSettings::EGbaGbar2) && checkForGbaBiosRequirement())) {
 					proceedToLaunch = cannotLaunchMsg(gameTid[cursorPosOnScreen][0]);
 					refreshBanners(screenOffset, fileOffset, dirContents);
 				}
@@ -1820,7 +1765,7 @@ std::string browseForFile(const std::vector<std::string_view> extensionList) {
 					}
 				}
 				if (proceedToLaunch && (useBootstrapAnyway || ((!dsiFeatures() || bs().b4dsMode) && isDSiWare[cursorPosOnScreen])) && bnrRomType[cursorPosOnScreen] == 0 && !dsModeForced && isHomebrew[cursorPosOnScreen] == 0) {
-					proceedToLaunch = checkForCompatibleGame(dirContents.at(fileOffset).name.c_str());
+					proceedToLaunch = checkForCompatibleGame();
 					if (proceedToLaunch && requiresDonorRom[cursorPosOnScreen]) {
 						const char* pathDefine = "DONORTWL_NDS_PATH"; // SDK5.x (TWL)
 						if (requiresDonorRom[cursorPosOnScreen] == 52) {
@@ -2048,6 +1993,72 @@ std::string browseForFile(const std::vector<std::string_view> extensionList) {
 			}
 		}
 
+		if (pressed & KEY_SELECT) {
+			listModeSwitched = (ms().ak_viewMode == TWLSettings::EViewList);
+
+			ms().ak_viewMode++;
+			if (ms().ak_viewMode > 3) ms().ak_viewMode = 0;
+
+			entriesPerScreen = (ms().ak_viewMode == TWLSettings::EViewList) ? ENTRIES_PER_SCREEN_LIST : ENTRIES_PER_SCREEN;
+			if (ms().ak_viewMode == TWLSettings::EViewSmallIcon) {
+				entriesPerScreen = ENTRIES_PER_SCREEN_SMALL;
+			}
+			displayIcons = (ms().ak_viewMode != TWLSettings::EViewList);
+			refreshIcons = (ms().ak_viewMode == TWLSettings::EViewSmallIcon);
+			
+			if (screenOffset > fileOffset - entriesPerScreen) screenOffset = fileOffset - entriesPerScreen;
+			if (screenOffset < fileOffset) screenOffset = fileOffset;
+			if (screenOffset > (int)dirContents.size() - entriesPerScreen) screenOffset = (int)dirContents.size() - entriesPerScreen;
+			if (screenOffset < 0) screenOffset = 0;
+			cursorPosOnScreen = fileOffset - screenOffset;
+			if (cursorPosOnScreen > entriesPerScreen - 1) cursorPosOnScreen = entriesPerScreen - 1;
+			if (cursorPosOnScreen < 0) cursorPosOnScreen = 0;
+		}
+
+		if (fileOffset < 0) {
+			fileOffset = dirContents.size() - 1;		// Wrap around to bottom of list
+			if (file_count > entriesPerScreen) {
+				screenOffset = (file_count-1) - entriesPerScreen;
+			}
+			cursorPosOnScreen = file_count-1;
+			if (cursorPosOnScreen > entriesPerScreen - 1) cursorPosOnScreen = entriesPerScreen - 1;
+		}
+		if (fileOffset > ((int)dirContents.size() - 1)) {
+			fileOffset = 0;		// Wrap around to top of list
+			screenOffset = 0;
+			cursorPosOnScreen = 0;
+		}
+
+		// Scroll screen if needed
+		if (fileOffset - screenOffset < (0.5 * entriesPerScreen) - 1){
+			if (screenOffset > 0) {
+				screenOffset--;
+				cursorPosOnScreen = fileOffset - screenOffset;
+				// scrollUpByOne = true;
+			}
+		} else if (fileOffset - screenOffset > (0.5 * entriesPerScreen)) {
+			if (screenOffset + entriesPerScreen < file_count) {
+				screenOffset++;
+				cursorPosOnScreen = fileOffset - screenOffset;
+				// scrollDownByOne = true;
+			}
+		}
+		if (displayIcons && (screenOffsetPrev != screenOffset || listModeSwitched || refreshIcons)) {
+			/* if (scrollUpByOne) {
+				loadIconUp(screenOffset, dirContents);
+			} else if (scrollDownByOne) {
+				loadIconDown(screenOffset, dirContents);
+			} else { */
+				loadIcons(screenOffset, dirContents);
+			// }
+		} else {
+			refreshBanners(screenOffset, fileOffset, dirContents);
+		}
+		updateSelectionBar();
+		screenOffsetPrev = screenOffset;
+		listModeSwitched = false;
+		refreshIcons = false;
+
 		if ((pressed & KEY_R) && bothSDandFlashcard()) {
 			resetIconScale();
 			CURPOS = fileOffset;
@@ -2067,7 +2078,7 @@ std::string browseForFile(const std::vector<std::string_view> extensionList) {
 			return "null";
 		}
 
-		if ((sys().isRegularDS() || (dsiFeatures() && ms().consoleModel < 2)) && (pressed & KEY_TOUCH) && touch.px >= brightnessX && touch.px < brightnessX+brightnessW && touch.py >= brightnessY && touch.py < brightnessY+brightnessH) {
+		if ((sys().isRegularDS() || (dsiFeatures() && !sys().i2cBricked() && ms().consoleModel < 2)) && (pressed & KEY_TOUCH) && touch.px >= brightnessX && touch.px < brightnessX+brightnessW && touch.py >= brightnessY && touch.py < brightnessY+brightnessH) {
 			fifoSendValue32(FIFO_USER_04, 1);
 			while (1) {
 				scanKeys();
@@ -2198,7 +2209,7 @@ std::string browseForFile(const std::vector<std::string_view> extensionList) {
 			if (ms().ak_viewMode == TWLSettings::EViewList) {
 				cursorPosOnScreen = 0;
 			}
-			if (!isTwlm[cursorPosOnScreen] && !isDirectory[cursorPosOnScreen] && (bnrRomType[cursorPosOnScreen] == 0 || bnrRomType[cursorPosOnScreen] == 1 || bnrRomType[cursorPosOnScreen] == 3)) {
+			if (isValid[cursorPosOnScreen] && !isTwlm[cursorPosOnScreen] && !isDirectory[cursorPosOnScreen] && (bnrRomType[cursorPosOnScreen] == 0 || bnrRomType[cursorPosOnScreen] == 1 || bnrRomType[cursorPosOnScreen] == 3)) {
 				perGameSettings(dirContents.at(fileOffset).name);
 				cursorPosOnScreen = cursorPosOnScreenBak;
 				refreshBanners(screenOffset, fileOffset, dirContents);

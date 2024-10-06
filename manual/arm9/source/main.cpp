@@ -121,7 +121,7 @@ void loadPageInfo(std::string pagePath) {
 		BG_PALETTE_SUB[0xF7] = colorTable[BG_PALETTE_SUB[0xF7]];
 	} */
 
-	for (int i=1;true;i++) {
+	for (int i=0;true;i++) {
 		std::string link = "LINK" + std::to_string(i);
 		if (pageIni.GetString(link,"DEST","NONE") == "NONE")
 			break;
@@ -285,6 +285,9 @@ int manualScreen(void) {
 
 		if (pressed & KEY_B) {
 			if (returnPage != -1) {
+				leaveTopBarIntact = true;
+				fadeType = false;
+				mmEffectEx(&snd_back);
 				currentPage = returnPage;
 				returnPage = -1;
 				pageYpos = 0;
@@ -293,6 +296,9 @@ int manualScreen(void) {
 				clearText(true);
 				printSmall(true, manPageTitleX, 0, manPageTitle, manPageTitleAlign);
 				updateText(true);
+				leaveTopBarIntact = false;
+			} else {
+				mmEffectEx(&snd_wrong);
 			}
 		} else if (held & KEY_UP) {
 			pageYpos -= 4;

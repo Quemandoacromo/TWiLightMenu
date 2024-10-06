@@ -32,23 +32,25 @@ SystemDetails::SystemDetails()
 
 	_isRunFromSD = false;
 	_dsiWramAccess = false;
+	_dsiWramMirrored = false;
 	_arm7SCFGLocked = false;
 	_isRegularDS = true;
 	_isDSPhat = false;
 	_hasRegulableBacklight = true;
+	_i2cBricked = false;
 	_nitroFsInitOk = false;
 	_fatInitOk = false;
 	_fifoOk = false;
 
 	fifoWaitValue32(FIFO_USER_03);
 
-	// status (Bit 0: isDSLite, Bit 1: scfgEnabled, Bit 2: REG_SNDEXTCNT)
-	u32 status = ((fifoGetValue32(FIFO_USER_03)) >> INIT_OFF);
+	const u32 status = ((fifoGetValue32(FIFO_USER_03)) >> INIT_OFF);
 
 	if (isDSiMode()) {
 		u32 wordBak = *(vu32*)0x03700000;
 		*(vu32*)0x03700000 = 0x414C5253;
 		_dsiWramAccess = *(vu32*)0x03700000 == 0x414C5253;
+		_dsiWramMirrored = (*(vu32*)0x03700000 == 0x414C5253 && *(vu32*)0x03708000 == 0x414C5253);
 		*(vu32*)0x03700000 = wordBak;
 	}
 
@@ -63,6 +65,8 @@ SystemDetails::SystemDetails()
 	_isDSPhat = CHECK_BIT(status, DSPHAT_BIT) != 0;
 
 	_hasRegulableBacklight = CHECK_BIT(status, BACKLIGHT_BIT) != 0;
+
+	_i2cBricked = CHECK_BIT(status, I2CBRICKED_BIT) != 0;
 
 	if (!dsiFeatures()) {
 		u32 wordBak = *(vu32*)0x02800000;

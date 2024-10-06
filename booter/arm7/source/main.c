@@ -80,7 +80,9 @@ int main() {
 		}
 	}
 
-	*(vu16*)(0x04004700) |= BIT(13);	// Set 48khz sound/mic frequency
+	if ((REG_SNDEXTCNT & SNDEXTCNT_ENABLE) && !(REG_SNDEXTCNT & BIT(13))) {
+		*(vu16*)0x04004700 |= BIT(13);	// Set 48khz sound/mic frequency
+	}
 
 	// clear sound registers
 	dmaFillWords(0, (void*)0x04000400, 0x100);
